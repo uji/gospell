@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"gospell"
 	"os"
 	"path"
 	"path/filepath"
@@ -25,22 +26,30 @@ func main() {
 		fmt.Printf("./")
 	} else {
 		var args []string
+		var filesRun, dirsRun int
 		for _, arg := range flag.Args() {
 			if strings.HasSuffix(arg, "/...") && isDir(arg[:len(arg)-len("/...")]) {
-				for _, dir := range allDirs(arg) {
+				for _, dir := range allDirsInFS(arg) {
 					args = append(args, dir)
 				}
+				dirsRun = 1
 			} else if isDir(arg) {
 				args = append(args, arg)
+				dirsRun = 1
 			} else if exists(arg) {
+				filesRun = 1
 				args = append(args, arg)
+			} else {
+				fmt.Fprintf(os.Stderr, "warning: %q matched no directories\n", arg)
 			}
 		}
-		if len(args) == 0 {
-			fmt.Fprintf(os.Stderr, "Not found\n")
+		if len(args) == 0 || filesRun+dirsRun != 1 {
 			usage()
+			os.Exit(2)
+		} else if filesRun == 1 {
+			gospell.FilesPerser(args)
 		} else {
-			fmt.Printf("%s", args)
+			gospell.DirsPerser(args)
 		}
 	}
 }
@@ -55,7 +64,7 @@ func exists(filename string) bool {
 	return err == nil
 }
 
-func allDirs(dirPath string) []string {
+func allDirsInFS(dirPath string) []string {
 	i := strings.Index(dirPath, "...")
 	dir, _ := path.Split(dirPath[:i])
 
