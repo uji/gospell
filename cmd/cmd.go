@@ -23,7 +23,7 @@ func main() {
 	flag.Parse()
 
 	if flag.NArg() == 0 {
-		fmt.Printf("./")
+		gospell.DirPerser("./")
 	} else {
 		var args []string
 		var filesRun, dirsRun int
